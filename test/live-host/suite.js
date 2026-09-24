@@ -107,6 +107,25 @@ async function run() {
     await settled(); assert.equal(liveProblems().length, 0);
   }
   checks.push('Single dollar and brace after a formatting macro from another file: exact live warning ranges, cleared on pairing');
+  for (const [text, code, token] of [
+    [R`é😀 $x_i_j$`, 'double-subscript', '_'],
+    [R`$x^{a_b}^c$`, 'double-superscript', '^']
+  ]) {
+    await replace(text); await settled();
+    const p = liveProblems(); assert.equal(p.length, 1, JSON.stringify(p));
+    assert.equal(p[0].code, code); assert.equal(doc.getText(p[0].range), token);
+    assert.equal(doc.offsetAt(p[0].range.start), text.lastIndexOf(token));
+    assert.equal(p[0].severity, vscode.DiagnosticSeverity.Warning);
+    assert.ok(p[0].range.isEqual(state().findings[0].range));
+  }
+  await replace(R`$x_{i_j} + x'^2$`); await settled(); assert.equal(liveProblems().length, 0);
+  await replace(R`\documentclass{article}\usepackage{amsthm,thmtools}\newtheorem{theorem}{Theorem}\begin{document}\input{defs}\savedclaim*\end{document}`);
+  const restatementEditor = await vscode.window.showTextDocument(defs, { preview: false });
+  await restatementEditor.edit(b => b.replace(new vscode.Range(defs.positionAt(0), defs.positionAt(defs.getText().length)),
+    R`\begin{restatable}{theorem}{savedclaim}$x_i^j$\end{restatable}`));
+  await until(() => state()?.version === doc.version && !state().pending && !liveProblems().length, 'Included restatement command still flagged');
+  assert.equal(defs.isDirty, true); assert.equal(await fs.readFile(defsUri.fsPath, 'utf8'), '');
+  checks.push('Duplicate sub/sup scripts share exact yellow-decoration and warning ranges; valid corrections clear; unsaved included restatement commands resolve');
   const large = '\\documentclass{article}\n\\usepackage{amsmath}\n\\begin{document}\n' + ('A paragraph with $\\alpha+\\beta$, \\emph{text}, and \\ref{eq:one}.\n').repeat(10000);
   await replace(large + '$\\alpha$\n\\end{document}'); await settled();
   for (let n = 0; n < 12; n++) {

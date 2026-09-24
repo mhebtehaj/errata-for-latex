@@ -1,5 +1,6 @@
 'use strict';
 const { parse } = require('./parser');
+const { MathScripts } = require('./scripts');
 const { TEXT_ARGUMENTS, storedStructureRisk } = require('../structure');
 const MATH_ENV = new Set('math displaymath equation equation* align align* alignat alignat* flalign flalign* gather gather* multline multline* eqnarray eqnarray* aligned alignedat gathered split array matrix pmatrix bmatrix Bmatrix vmatrix Vmatrix cases smallmatrix subarray'.split(' '));
 const DISPLAY = new Set('displaymath equation equation* align align* alignat alignat* flalign flalign* gather gather* multline multline* eqnarray eqnarray*'.split(' '));
@@ -31,6 +32,7 @@ function analyze(events, options) {
     if (findings.length >= 500 || !token || token.end <= token.start) return;
     findings.push({ code, message, file: token.file, start: token.start, end: token.end, severity, ...extra });
   };
+  const scripts = new MathScripts(emit);
   const lookup = name => { for (let i = scopes.length - 1; i >= 0; i--) if (scopes[i].has(name)) return scopes[i].get(name); return known.has(name) ? { builtin: true } : null; };
   const define = (name, value, global = false) => { scopes[global ? 0 : scopes.length - 1].set(name, value); guesses.clear(); };
   const related = t => t ? [{ file: t.file, start: t.start, end: t.end, message: 'Opening token is here.' }] : [];
@@ -72,6 +74,7 @@ function analyze(events, options) {
   };
   for (const t of events) {
     if (t.kind === 'command' && CONDITIONAL.test(t.name) && !NORMAL_IF.has(t.name)) {
+      scripts.reset();
       const parent = branches.some(b => b.skip);
       const unknown = !['iftrue', 'iffalse'].includes(t.name);
       branches.push({ skip: parent || t.name === 'iffalse', parent, unknown });
@@ -82,6 +85,7 @@ function analyze(events, options) {
     if (t.kind === 'command' && t.name === 'fi' && branches.length) { branches.pop(); continue; }
     if (branches.some(b => b.skip)) continue;
     const uncertain = dynamic || branches.some(b => b.unknown);
+    if (options.structure !== false) scripts.accept(t, mode === true && !uncertain && !structureUncertain, t.kind === 'command' ? lookup(t.name) : null);
     if (t.kind === 'uncertain') { uncertainty.add(t.reason); dynamic = true; continue; }
     if (t.kind === 'include') { if (!t.child) uncertainty.add(`Input ${t.value} could not be indexed.`); continue; }
     if (t.kind === 'package' || t.kind === 'class') {
@@ -120,10 +124,12 @@ function analyze(events, options) {
       continue;
     }
     if (t.kind === 'begin') {
+      const restatable = known.has('restatable') && /^restatable\*?$/.test(t.name);
+      if (t.restatement && known.has('restatable')) define(t.restatement, {}, true);
       const def = lookup(t.name)?.environment ? lookup(t.name) : null;
       const isMath = MATH_ENV.has(t.name) || def?.math;
       if (DISPLAY.has(t.name) && math) { emit('math-unclosed', `Math opened here has no matching ${math.close} before the display environment.`, math); closeMath(); }
-      const frame = { ...t, previousMode: mode, mode: isMath ? true : def || TEXT_ENV.has(t.name) ? mode : null, scopeDepth: scopes.length, groupDepth: groups.length, alignment: ALIGN.has(t.name) || def?.alignment, amps: 0 };
+      const frame = { ...t, previousMode: mode, mode: isMath ? true : def || restatable || TEXT_ENV.has(t.name) ? mode : null, scopeDepth: scopes.length, groupDepth: groups.length, alignment: ALIGN.has(t.name) || def?.alignment, amps: 0 };
       envs.push(frame); scopes.push(new Map()); mode = frame.mode;
       if (def) for (const local of def.locals) define(local.name, { parameters: local.parameters });
       continue;

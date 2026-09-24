@@ -17,6 +17,32 @@ const DOC = new Set([...S.DOCUMENT_DEFINITIONS, '\\NewExpandableDocumentCommand'
 const ENV = S.ENVIRONMENT_DEFINITIONS;
 const PRIM = S.PRIMITIVE_DEFINITIONS;
 
+// Only literal, callable names are indexed; computed names remain uncertain.
+function restatement(text, at, environment) {
+  at = whitespace(text, at);
+  const optional = text[at] === '[' ? group(text, at, '[', ']') : null;
+  if (optional) at = whitespace(text, optional.end);
+  if (/^restatable\*?$/.test(environment)) {
+    const theorem = group(text, at);
+    const name = theorem && group(text, whitespace(text, theorem.end));
+    if (name && /^[A-Za-z@]+$/.test(valueOf(text, name))) return valueOf(text, name);
+  } else if (optional) {
+    // Split keys only at top level: titles may contain commas or 'restate='.
+    const keys = []; let start = optional.start + 1;
+    for (let i = start; i < optional.end - 1; i++) {
+      if (text[i] === '\\') { i = commandAt(text, i).end - 1; continue; }
+      if (text[i] === '{') { const g = group(text, i); if (g) { i = g.end - 1; continue; } }
+      if (text[i] === ',') { keys.push(text.slice(start, i)); start = i + 1; }
+    }
+    keys.push(text.slice(start, optional.end - 1));
+    for (const key of keys) {
+      const match = /^\s*restate\s*=\s*(?:\{\s*([A-Za-z@]+)\s*\}|([A-Za-z@]+))\s*$/.exec(key);
+      if (match) return match[1] || match[2];
+    }
+  }
+  return null;
+}
+
 function definition(text, token) {
   const op = token.value;
   if (!SIMPLE.has(op) && !DOC.has(op) && !ENV.has(op) && !PRIM.has(op) && op !== '\\let' && op !== '\\newtheorem') return null;
@@ -101,7 +127,7 @@ function parse(text) {
         const g = group(text, whitespace(text, at));
         if (g) {
           const name = valueOf(text, g);
-          push(t.value === '\\begin' ? 'begin' : 'end', t.start, g.end, { name });
+          push(t.value === '\\begin' ? 'begin' : 'end', t.start, g.end, { name, restatement: t.value === '\\begin' ? restatement(text, g.end, name) : null });
           advance(g.end);
           if (t.value === '\\begin' && S.OPAQUE_ENVIRONMENTS.has(name)) {
             const re = new RegExp('\\\\end\\s*\\{' + name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\}', 'g');
@@ -132,7 +158,16 @@ function parse(text) {
       continue;
     }
     if (c === '$') { const end = at + (text[at + 1] === '$' ? 2 : 1); push('math', at, end, { value: text.slice(at, end) }); at = end; continue; }
-    if ('{}&()[]'.includes(c)) push(({ '{': 'open', '}': 'close', '&': 'amp' })[c] || 'ordinary', at, at + 1, { value: c });
+    if ('_^'.includes(c)) push('script', at, at + 1, { value: c });
+    else if (c === "'") push('prime', at, at + 1, { value: c });
+    else if ('{}&()[]'.includes(c)) push(({ '{': 'open', '}': 'close', '&': 'amp' })[c] || 'ordinary', at, at + 1, { value: c });
+    else {
+      // Coalesce ordinary characters to keep prose-heavy documents inexpensive.
+      const start = at;
+      do { at += text.codePointAt(at) > 0xffff ? 2 : 1; }
+      while (at < text.length && !/[\s\\%${}&()[\]_^']/.test(text[at]));
+      push('text', start, at, { value: text.slice(start, at) }); continue;
+    }
     at += text.codePointAt(at) > 0xffff ? 2 : 1;
   }
   return { text, events };

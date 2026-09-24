@@ -10,7 +10,8 @@ const FALLBACK = {
   amsmath: 'dfrac tfrac binom dbinom tbinom cfrac genfrac overset underset sideset substack boxed text intertext numberwithin tag notag nonumber eqref operatorname DeclareMathOperator allowdisplaybreaks displaybreak',
   amssymb: 'mathbb mathfrak varnothing leqslant geqslant nleq nsubseteq lesssim gtrsim blacksquare square checkmark therefore because',
   amsthm: 'newtheorem theoremstyle qed qedsymbol qedhere',
-  thmtools: 'declaretheorem declaretheoremstyle listoftheorems',
+  thmtools: 'declaretheorem declaretheoremstyle listoftheorems restatable endrestatable',
+  'thm-restate': '',
   mathtools: 'coloneqq eqqcolon mathclap mathllap mathrlap DeclarePairedDelimiter DeclarePairedDelimiterX shortintertext',
   hyperref: 'href url autoref hyperref hypersetup phantomsection texorpdfstring pdfstringdef DisableHyper',
   cleveref: 'cref Cref crefrange Crefrange crefname Crefname',
@@ -19,7 +20,7 @@ const FALLBACK = {
   physics: 'ket bra braket ketbra expval matrixel mel innerproduct outerproduct norm abs qty quantity pqty bqty Bqty vqty dv pdv dd eval comm anticommutator order',
   xparse: '', amsfonts: 'mathbb mathfrak', bm: 'bm', cancel: 'cancel bcancel xcancel cancelto'
 };
-const DEPENDENCIES = { amsmath: ['amstext', 'amsbsy', 'amsopn'], amssymb: ['amsfonts'], mathtools: ['amsmath'], physics: ['amsmath', 'xparse'] };
+const DEPENDENCIES = { 'thm-restate': ['thmtools'], amsmath: ['amstext', 'amsbsy', 'amsopn'], amssymb: ['amsfonts'], mathtools: ['amsmath'], physics: ['amsmath', 'xparse'] };
 class Metadata {
   constructor(directory) { this.directory = directory; this.cache = new Map(); }
   async load(name, trail = new Set()) {

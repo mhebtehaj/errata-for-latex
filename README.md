@@ -41,6 +41,10 @@ A LaTeX Problems-list change also triggers an immediate report refresh. A metada
 
 Command indexing recognizes standard commands, loaded package dependencies, definitions in open unsaved buffers and included `.tex`/`.sty`/`.cls` files, `\newcommand`, `\renewcommand`, `\providecommand`, `\DeclareRobustCommand`, `\DeclareMathOperator`, `\def`/`\gdef`/`\edef`/`\xdef`, `\let`, xparse document commands/environments, custom environments, and common allocation declarations. Definitions take effect in source order, with ordinary group/environment scope. Stored macro bodies are not linted as if they were executed text.
 
+Theorem restatements from `thmtools`/`thm-restate` are indexed from `restatable`, `restatable*`, and literal `restate=...` options, including included unsaved files. Their generated commands can be called with or without a star.
+
+Live checks highlight duplicate literal scripts such as `$x_i_j$` and `$x^2^3$` at the second `_` or `^`. Nested scripts (`$x_{i_j}$`), separate bases, and valid prime notation remain allowed. These checks do not expand arbitrary macros; arguments of unsupported commands are treated conservatively.
+
 Checks also cover unmatched `\left`/`\right`, a conservative set of math-only commands in text, stray alignment tabs, and excess tabs in `split`/`eqnarray`. Ordinary parentheses are ignored by default. Optional informational parenthesis hints exclude mixed square/round intervals and sized delimiter combinations.
 
 
