@@ -80,3 +80,35 @@ test('double script rules honor structure disable and uncertain TeX', async () =
   assert.deepEqual(await check('$x_i_j$', { structure: false }), []);
   assert.deepEqual(await check(R`\ifnum 1=1 $x_i_j$\fi`), []);
 });
+test('standard appendix command is recognized and typos remain visible', async () => {
+  const text = R`\documentclass{article}\begin{document}\appendix\section{Example}\apendix\end{document}`;
+  const f = await check(text);
+  assert.deepEqual(f.map(f => text.slice(f.start, f.end)), [R`\apendix`]);
+  assert.ok(f[0].suggestions.includes('appendix'));
+});
+test('structural checks resume after a completed expl3 setup block', async () => {
+  const setup = R`\ExplSyntaxOn
+\cs_new_protected:Npn \example_helper:n #1 { \ifnum #1=0 \fi $1_2_3$ }
+\NewDocumentCommand{\example}{m}{\example_helper:n {#1}}
+\ExplSyntaxOff
+`;
+  for (const [body, code, token] of [[R`$1_2_3$`, 'double-subscript', '_'],
+    [R`$1^2^3$`, 'double-superscript', '^'], ['$', 'math-unclosed', '$'], ['{', 'brace-unclosed', '{']]) {
+    const text = setup + body;
+    const f = await check(text);
+    assert.deepEqual(f.map(f => f.code), [code]);
+    assert.equal(f[0].start, text.lastIndexOf(token));
+  }
+  assert.deepEqual(await check(setup + R`\example{1} $1_2^3$`), []);
+});
+test('expl3 syntax boundaries preserve outer math, groups and independent uncertainty', async () => {
+  assert.deepEqual((await check(R`$x + \ExplSyntaxOn 1_2_3 \ExplSyntaxOff 1_2_3$`)).map(f => f.code), ['double-subscript']);
+  assert.deepEqual((await check(R`{\ExplSyntaxOn\NewDocumentCommand{\localexample}{}{ok}\ExplSyntaxOff\localexample}\localexample`)).map(f => f.code), ['unknown-command']);
+  for (const text of [R`\ExplSyntaxOn $1_2_3$`,
+    '\\catcode`\\_=12 \\ExplSyntaxOn\\ExplSyntaxOff $1_2_3$',
+    '\\ExplSyntaxOn\\catcode`\\$=12 \\ExplSyntaxOff $1_2_3$',
+    R`\newcommand{\openmath}{$}\openmath\ExplSyntaxOn\ExplSyntaxOff 1_2_3$`,
+    R`\ifnum 1=1 \ExplSyntaxOn\ExplSyntaxOff $1_2_3$\fi`]) {
+    assert.deepEqual(await check(text), [], text);
+  }
+});

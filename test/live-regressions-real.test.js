@@ -10,6 +10,11 @@ const R = String.raw;
 const engine = process.env.LATEX_HIGHLIGHTER_TEST_ENGINE || (fs.existsSync('/Library/TeX/texbin/pdflatex') ? '/Library/TeX/texbin/pdflatex' : 'pdflatex');
 const probe = spawnSync(engine, ['--version'], { timeout: 10000 });
 const cases = [
+  [R`\appendix\section{Example}Text`],
+  [R`\ExplSyntaxOn\cs_new_protected:Npn \example:n #1 {#1}\ExplSyntaxOff $1_2_3$`, 'double-subscript'],
+  [R`\ExplSyntaxOn\cs_new_protected:Npn \example:n #1 {#1}\ExplSyntaxOff $1^2^3$`, 'double-superscript'],
+  [R`\ExplSyntaxOn $1_2_3$ \ExplSyntaxOff $1_2^3$`],
+  [R`$x + \ExplSyntaxOn 1_2_3 \ExplSyntaxOff 1_2_3$`, 'double-subscript'],
   [R`$x_i_j$`, 'double-subscript'], [R`$x^2^3$`, 'double-superscript'],
   [R`$x_{i}^{2}_{j}$`, 'double-subscript'], [R`$x^{a_b}^c$`, 'double-superscript'],
   [R`$x'^2$`], [R`$x'^2^3$`, 'double-superscript'], [R`$x^2'$`, 'double-superscript'],
