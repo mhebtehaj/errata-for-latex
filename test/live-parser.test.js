@@ -20,6 +20,23 @@ async function check(text, options = {}) {
   }
   return analyze(events, { base: await metadata.base(), sources: new Map([[file, parsed]]), ...options }).findings;
 }
+test('manual bibliography entries are core commands without package metadata; typos still report', async () => {
+  const text = R`\documentclass{article}
+\begin{document}
+\begin{thebibliography}{Ref}
+\bibitem[Ref]{reference} A reference with a custom label.
+\bibitem{other} A reference with a numbered label.
+\end{thebibliography}
+\end{document}`;
+  assert.deepEqual(await check(text), []);
+
+  const misspelled = text.replace(R`\bibitem{other}`, R`\bibtem{other}`);
+  const findings = await check(misspelled);
+  assert.equal(findings.length, 1, JSON.stringify(findings));
+  assert.equal(findings[0].code, 'unknown-command');
+  assert.equal(misspelled.slice(findings[0].start, findings[0].end), R`\bibtem`);
+  assert.ok(findings[0].suggestions.includes('bibitem'));
+});
 for (const text of [R`$\alhpa$`, R`\[\alhpa\]`, R`\begin{align} a &= \alhpa \\ b &= 2 \end{align}`]) {
   test('exact unknown token: ' + text, async () => {
     const f = await check(text); assert.equal(f.length, 1, JSON.stringify(f));
