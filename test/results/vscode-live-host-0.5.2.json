@@ -1,0 +1,54 @@
+{
+  "editor": "Visual Studio Code",
+  "editorApiVersion": "1.138.0",
+  "extension": "0.5.2",
+  "checks": [
+    "Inline, display, align: exact live warning ranges, Problems, and real hover provider",
+    "UTF-16, correction, undo and redo without save",
+    "Rapid consecutive edits discard superseded snapshots",
+    "Brand-new untitled LaTeX buffer and switching back to the main document",
+    "Adding definition in another unsaved buffer updates the already-open parent; switching files",
+    "Package dependencies, custom environments, declarations, comments, verbatim, intervals",
+    "Unmatched braces, math, environments, left/right underline existing openers",
+    "Single dollar and brace after a formatting macro from another file: exact live warning ranges, cleared on pairing",
+    "Duplicate sub/sup scripts share exact yellow-decoration and warning ranges; valid corrections clear; unsaved included restatement commands resolve",
+    "12 measured unsaved edits on a 640 KB / 10005-line manuscript fixture",
+    "Edit while worker analysis is in flight cannot revive obsolete diagnostics",
+    "Late stale compiler report cannot restore or replace current live ranges",
+    "Untouched live findings persist through rapid Unicode/multiline edits; fixing one token immediately clears only that token",
+    "Typing in one buffer preserves untouched findings in another unsaved buffer",
+    "Boolean option switches between retained and immediately cleared highlights without reload",
+    "Workspace color changes preserve live findings; 800 ms and 50 ms typing delays apply without reload"
+  ],
+  "samplesMs": [
+    201.963208,
+    315.19670800000006,
+    321.17816600000015,
+    447.37541600000077,
+    431.9027909999986,
+    419.1299999999992,
+    408.68616699999984,
+    397.27237500000047,
+    428.61925000000156,
+    419.69945799999914,
+    404.83408299999974,
+    416.8877080000002,
+    420.5237080000006,
+    419.96229200000016,
+    404.7637500000001
+  ],
+  "medianMs": 416.8877080000002,
+  "maxMs": 447.37541600000077,
+  "largeFixtureCharacters": 640062,
+  "lastTiming": {
+    "afterEditMs": 2.505957999997918,
+    "analysisMs": 1.0641250000007858,
+    "dispatchMs": 1.3237079999998969,
+    "publishedAt": 23899.34925
+  },
+  "settingsTiming": {
+    "slowMs": 804.098917000003,
+    "fastMs": 51.352749999998196
+  },
+  "dirty": true
+}

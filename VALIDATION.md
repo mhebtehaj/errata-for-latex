@@ -95,3 +95,24 @@ Tested on 2026-09-18. This release changes visible names and documentation to **
 - Both isolated VS Code 1.138.0 host suites passed on macOS: 15 live-check groups using the renamed `Errata Live` source, and seven compiler/setup/restore checks. The live timing median was 374.6 ms across 15 samples; this is an observed timing, not a guarantee.
 - The packaged manifest has the new display name and description. Extension identity, command identifiers, and all configuration properties were compared with 0.5.0 and are unchanged. Packaged runtime files were compared byte-for-byte with the source.
 - Cursor-specific and visual-pixel limitations recorded for 0.5.0 still apply; the branding changes do not establish a new Cursor host test result.
+
+## 0.5.2 theorem restatements and repeated scripts
+
+Tested on 2026-09-24 using disposable public fixtures; no manuscript was read or edited.
+
+- Fifteen regression cases failed on the original code. The fixes index literal restatement names and track repeated literal math scripts without treating stored macro bodies as executed text.
+- `npm run check` and all 261 unit and real-pdfLaTeX tests passed, with no failures or skips. Real-TeX fixtures cover both restatable variants, the key-value form, invalid scripts, valid nested scripts, and LaTeX prime notation. TeX shell escape stayed disabled.
+- Isolated VS Code 1.138.0 passed all 16 live-check groups and all seven compiler/setup/restore checks. New editor checks verify the exact duplicate-token warning and decoration ranges, correction clearing, and restatement definitions in an unsaved included file.
+- The 15 live edit samples had a median of 416.9 ms and a maximum of 447.4 ms. Raw evidence is in `test/results/vscode-live-host-0.5.2.json`; these observations are not timing guarantees.
+- A fresh Cursor test profile exited before producing a test result. That run is incomplete, not passing Cursor-host validation. Pixel-level rendering was not inspected.
+- VSIX packaging passed. Generated names and script effects from arbitrary macro expansion remain outside the supported static checks.
+
+## 0.5.3 expl3 setup recovery and appendix
+
+Tested on 2026-09-24. Three new regression groups failed on 0.5.2 and pass with this fix. A completed expl3 setup block no longer disables ordinary checks for the rest of a document, and the standard appendix command is recognized.
+
+- `npm run check` and all 269 unit and real-pdfLaTeX tests passed, with no failures or skips. New compiler fixtures cover numeric duplicate scripts after expl3 code, valid underscore letters inside expl3 syntax, preserved outer math context, and appendix. Shell escape stayed disabled.
+- Isolated VS Code 1.138.0 passed all 17 live-check groups and all seven compiler/setup checks. The new live case verifies exact numeric duplicate-marker warning and decoration ranges after an unsaved included setup file, and clearing after correction.
+- The live suite measured median 439.2 ms and maximum 521.3 ms over 15 edits; these are observations, not guarantees. Raw results are in `test/results/vscode-live-host-0.5.3.json`.
+- VSIX packaging passed. The earlier Cursor host limitation remains; these host results are from VS Code, not a newly completed Cursor host run.
+- Expl3 implementation bodies are not expanded. Explicit category-code changes and other independent sources of uncertainty remain conservative.
