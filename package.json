@@ -2,7 +2,7 @@
   "name": "latex-exact-errors",
   "displayName": "Errata for LaTeX",
   "description": "A live, macro-aware LaTeX inspector.",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "publisher": "mhebtehaj",
   "license": "MIT",
   "engines": {
